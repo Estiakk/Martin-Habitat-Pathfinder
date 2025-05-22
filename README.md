@@ -43,5 +43,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- NASA for providing Mars topographical data
+- NASA for providing open-source Mars topographical data
 - The open-source community for various tools and libraries used in this project
