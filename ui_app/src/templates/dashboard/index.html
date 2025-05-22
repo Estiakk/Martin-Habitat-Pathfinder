@@ -1,0 +1,187 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle"></i> System Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>CPU Usage:</span>
+                    <div class="progress" style="width: 60%; height: 20px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ system_status.cpu_percent }}%;" aria-valuenow="{{ system_status.cpu_percent }}" aria-valuemin="0" aria-valuemax="100">{{ system_status.cpu_percent }}%</div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Memory Usage:</span>
+                    <div class="progress" style="width: 60%; height: 20px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ system_status.memory_percent }}%;" aria-valuenow="{{ system_status.memory_percent }}" aria-valuemin="0" aria-valuemax="100">{{ system_status.memory_percent }}%</div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Disk Usage:</span>
+                    <div class="progress" style="width: 60%; height: 20px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ system_status.disk_percent }}%;" aria-valuenow="{{ system_status.disk_percent }}" aria-valuemin="0" aria-valuemax="100">{{ system_status.disk_percent }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-check-circle"></i> Component Status</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        PDF Documents
+                        <span class="badge bg-primary rounded-pill">{{ pdf_count }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Processed Data Files
+                        <span class="badge bg-info rounded-pill">{{ processed_count }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Training Data Files
+                        <span class="badge bg-success rounded-pill">{{ training_count }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Ollama Status
+                        <span class="badge {% if ollama_status == 'Online' %}bg-success{% elif ollama_status == 'Offline' %}bg-danger{% else %}bg-warning{% endif %} rounded-pill">{{ ollama_status }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Simulation Status
+                        <span class="badge {% if simulation_status == 'Ready' %}bg-success{% else %}bg-warning{% endif %} rounded-pill">{{ simulation_status }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('pdf.index') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center p-3">
+                            <i class="bi bi-file-earmark-pdf fs-1 mb-2"></i>
+                            <span>Upload PDF</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('data.run_pipeline') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center align-items-center p-3" onclick="event.preventDefault(); document.getElementById('run-pipeline-form').submit();">
+                            <i class="bi bi-gear fs-1 mb-2"></i>
+                            <span>Run Pipeline</span>
+                        </a>
+                        <form id="run-pipeline-form" action="{{ url_for('data.run_pipeline') }}" method="post" style="display: none;"></form>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('simulation.index') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center align-items-center p-3">
+                            <i class="bi bi-play-circle fs-1 mb-2"></i>
+                            <span>Run Simulation</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('ollama.index') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center align-items-center p-3">
+                            <i class="bi bi-robot fs-1 mb-2"></i>
+                            <span>Manage LLMs</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('data.view_combined') }}" class="btn btn-outline-danger w-100 h-100 d-flex flex-column justify-content-center align-items-center p-3">
+                            <i class="bi bi-graph-up fs-1 mb-2"></i>
+                            <span>View Data</span>
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('dashboard.quick_start') }}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column justify-content-center align-items-center p-3">
+                            <i class="bi bi-book fs-1 mb-2"></i>
+                            <span>Quick Guide</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0"><i class="bi bi-clock-history"></i> Recent Activities</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Name</th>
+                                <th>Time</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_activities %}
+                                {% for activity in recent_activities %}
+                                    <tr>
+                                        <td>{{ activity.type }}</td>
+                                        <td>{{ activity.name }}</td>
+                                        <td>{{ activity.time_str }}</td>
+                                        <td>
+                                            <a href="{{ activity.url }}" class="btn btn-sm btn-primary">View</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No recent activities</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-diagram-3"></i> Workflow Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="workflow-diagram text-center">
+                    <img src="{{ url_for('serve_static', filename='img/workflow.png') }}" alt="Workflow Diagram" class="img-fluid" onerror="this.src='https://via.placeholder.com/800x200?text=Workflow+Diagram'">
+                </div>
+                <div class="mt-3 text-center">
+                    <a href="{{ url_for('dashboard.workflow') }}" class="btn btn-outline-secondary">View Detailed Workflow</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Refresh system status every 30 seconds
+    setInterval(function() {
+        fetch("{{ url_for('dashboard.status') }}")
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('.progress-bar[aria-valuenow]').style.width = data.system.cpu_percent + '%';
+                document.querySelector('.progress-bar[aria-valuenow]').setAttribute('aria-valuenow', data.system.cpu_percent);
+                document.querySelector('.progress-bar[aria-valuenow]').textContent = data.system.cpu_percent + '%';
+                
+                document.querySelectorAll('.progress-bar')[1].style.width = data.system.memory_percent + '%';
+                document.querySelectorAll('.progress-bar')[1].setAttribute('aria-valuenow', data.system.memory_percent);
+                document.querySelectorAll('.progress-bar')[1].textContent = data.system.memory_percent + '%';
+                
+                document.querySelectorAll('.progress-bar')[2].style.width = data.system.disk_percent + '%';
+                document.querySelectorAll('.progress-bar')[2].setAttribute('aria-valuenow', data.system.disk_percent);
+                document.querySelectorAll('.progress-bar')[2].textContent = data.system.disk_percent + '%';
+            });
+    }, 30000);
+</script>
+{% endblock %}

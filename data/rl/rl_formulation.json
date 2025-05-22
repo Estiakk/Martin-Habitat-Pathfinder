@@ -1,0 +1,204 @@
+{
+  "mdp_components": {
+    "state_space": {
+      "time": [
+        "sol",
+        "hour"
+      ],
+      "environment": [
+        "temperature",
+        "pressure",
+        "wind_speed",
+        "dust_opacity",
+        "solar_irradiance"
+      ],
+      "habitat": [
+        "power",
+        "water",
+        "oxygen",
+        "food",
+        "spare_parts",
+        "internal_temperature",
+        "internal_pressure",
+        "internal_humidity",
+        "co2_level"
+      ],
+      "subsystems": [
+        "power_system_status",
+        "life_support_status",
+        "isru_status",
+        "thermal_control_status",
+        "power_system_maintenance",
+        "life_support_maintenance",
+        "isru_maintenance",
+        "thermal_control_maintenance",
+        "battery_charge",
+        "power_generation",
+        "power_consumption",
+        "heating_power"
+      ]
+    },
+    "action_space": {
+      "power_allocation": [
+        "life_support",
+        "isru",
+        "thermal_control"
+      ],
+      "isru_mode": [
+        "water",
+        "oxygen",
+        "both",
+        "off"
+      ],
+      "maintenance_target": [
+        "power_system",
+        "life_support",
+        "isru",
+        "thermal_control",
+        "none"
+      ]
+    },
+    "reward_components": {
+      "resource_levels": {
+        "description": "Reward for maintaining optimal resource levels",
+        "weight": 0.4
+      },
+      "system_health": {
+        "description": "Reward for maintaining operational systems",
+        "weight": 0.3
+      },
+      "comfort": {
+        "description": "Reward for maintaining comfortable habitat conditions",
+        "weight": 0.1
+      },
+      "efficiency": {
+        "description": "Reward for efficient resource utilization",
+        "weight": 0.2
+      }
+    },
+    "transition_dynamics": {
+      "description": "Transitions are determined by the simulation environment",
+      "stochasticity_sources": [
+        "equipment failures",
+        "dust storms",
+        "environmental variations"
+      ]
+    }
+  },
+  "curriculum_stages": [
+    {
+      "name": "basic_operations",
+      "description": "Learn basic habitat operations without failures",
+      "difficulty": "easy",
+      "duration_sols": 10,
+      "failure_rates_multiplier": 0.0,
+      "dust_storm_probability": 0.0
+    },
+    {
+      "name": "resource_management",
+      "description": "Learn to manage resources efficiently",
+      "difficulty": "easy",
+      "duration_sols": 20,
+      "failure_rates_multiplier": 0.2,
+      "dust_storm_probability": 0.005
+    },
+    {
+      "name": "system_failures",
+      "description": "Learn to handle system failures",
+      "difficulty": "normal",
+      "duration_sols": 30,
+      "failure_rates_multiplier": 1.0,
+      "dust_storm_probability": 0.01
+    },
+    {
+      "name": "extreme_conditions",
+      "description": "Learn to handle extreme conditions and multiple failures",
+      "difficulty": "hard",
+      "duration_sols": 50,
+      "failure_rates_multiplier": 1.5,
+      "dust_storm_probability": 0.02
+    }
+  ],
+  "evaluation_scenarios": [
+    {
+      "name": "nominal_operations",
+      "description": "Normal operations without extreme events",
+      "duration_sols": 30,
+      "config_overrides": {}
+    },
+    {
+      "name": "dust_storm_season",
+      "description": "Extended period with high dust storm probability",
+      "duration_sols": 30,
+      "config_overrides": {
+        "dust_storm_probability": 0.05
+      }
+    },
+    {
+      "name": "resource_scarcity",
+      "description": "Limited initial resources",
+      "duration_sols": 30,
+      "config_overrides": {
+        "habitat": {
+          "initial_resources": {
+            "power": 50,
+            "water": 500,
+            "oxygen": 200,
+            "food": 500,
+            "spare_parts": 30
+          }
+        }
+      }
+    },
+    {
+      "name": "system_failures",
+      "description": "High probability of system failures",
+      "duration_sols": 30,
+      "config_overrides": {
+        "maintenance": {
+          "failure_rates": {
+            "power_system": 0.005,
+            "life_support": 0.008,
+            "isru": 0.01,
+            "thermal_control": 0.005
+          }
+        }
+      }
+    },
+    {
+      "name": "polar_mission",
+      "description": "Mission at polar location with extreme temperature variations",
+      "duration_sols": 30,
+      "config_overrides": {
+        "location": {
+          "name": "Korolev Crater",
+          "latitude": 73.0,
+          "longitude": 195.0,
+          "elevation": -2000
+        }
+      }
+    }
+  ],
+  "evaluation_metrics": {
+    "survival_rate": {
+      "description": "Percentage of episodes where habitat remains operational for full duration",
+      "higher_is_better": true
+    },
+    "resource_efficiency": {
+      "description": "Average resource levels maintained throughout mission",
+      "higher_is_better": true
+    },
+    "comfort_index": {
+      "description": "Average comfort conditions maintained throughout mission",
+      "higher_is_better": true
+    },
+    "maintenance_efficiency": {
+      "description": "Ratio of preventive to emergency maintenance actions",
+      "higher_is_better": true
+    },
+    "power_balance": {
+      "description": "Average alignment between power generation and consumption",
+      "higher_is_better": true
+    }
+  }
+}

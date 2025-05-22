@@ -1,0 +1,10 @@
+{
+  "source_file": "mola_megdr_4.csv",
+  "preprocessing_steps": [
+    "missing_value_imputation",
+    "coordinate_alignment",
+    "unit_normalization",
+    "noise_filtering"
+  ],
+  "coordinate_system": "areocentric"
+}

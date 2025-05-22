@@ -1,0 +1,209 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-file-earmark-pdf"></i> Upload PDF</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('pdf.upload_pdf') }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="pdf_file" class="form-label">Select PDF File</label>
+                        <input class="form-control" type="file" id="pdf_file" name="pdf_file" accept=".pdf" required>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="auto_process" name="auto_process" checked>
+                        <label class="form-check-label" for="auto_process">Automatically process after upload</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Upload</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-gear"></i> Batch Actions</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('pdf.process_all_pdfs') }}" method="post" class="mb-2">
+                    <button type="submit" class="btn btn-success w-100">Process All PDFs</button>
+                </form>
+                <form action="{{ url_for('pdf.combine_data') }}" method="post" class="mb-2">
+                    <button type="submit" class="btn btn-info w-100">Combine Data</button>
+                </form>
+                <form action="{{ url_for('pdf.prepare_training_data') }}" method="post" class="mb-2">
+                    <button type="submit" class="btn btn-warning w-100">Prepare Training Data</button>
+                </form>
+                <form action="{{ url_for('pdf.prepare_simulation_data') }}" method="post">
+                    <button type="submit" class="btn btn-danger w-100">Prepare Simulation Data</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-file-earmark-pdf"></i> Uploaded PDFs</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Filename</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if pdfs %}
+                                {% for pdf in pdfs %}
+                                    <tr>
+                                        <td>{{ pdf }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('pdf.view_pdf', filename=pdf) }}" class="btn btn-sm btn-primary">View</a>
+                                                <a href="{{ url_for('pdf.process_pdf', filename=pdf) }}" class="btn btn-sm btn-success">Process</a>
+                                                <a href="{{ url_for('pdf.view_results', filename=pdf) }}" class="btn btn-sm btn-info">Results</a>
+                                                <a href="{{ url_for('pdf.download_pdf', filename=pdf) }}" class="btn btn-sm btn-secondary">Download</a>
+                                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">Delete</button>
+                                            </div>
+                                            
+                                            <!-- Delete Modal -->
+                                            <div class="modal fade" id="deleteModal{{ loop.index }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ loop.index }}" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="deleteModalLabel{{ loop.index }}">Confirm Delete</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            Are you sure you want to delete <strong>{{ pdf }}</strong>?
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <form action="{{ url_for('pdf.delete_pdf', filename=pdf) }}" method="post">
+                                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-center">No PDFs uploaded yet</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0"><i class="bi bi-file-earmark-text"></i> Processed Files</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Filename</th>
+                                <th>Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if processed_files %}
+                                {% for file in processed_files %}
+                                    <tr>
+                                        <td>{{ file }}</td>
+                                        <td>
+                                            {% if file.endswith('_scientific_data.json') %}
+                                                Scientific Data
+                                            {% elif file.endswith('_simulation_params.json') %}
+                                                Simulation Parameters
+                                            {% else %}
+                                                Other
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% set pdf_name = file.split('_')[0] + '.pdf' %}
+                                            {% if file.endswith('_scientific_data.json') %}
+                                                <a href="{{ url_for('pdf.download_results', filename=pdf_name, result_type='scientific_data') }}" class="btn btn-sm btn-primary">Download</a>
+                                            {% elif file.endswith('_simulation_params.json') %}
+                                                <a href="{{ url_for('pdf.download_results', filename=pdf_name, result_type='simulation_params') }}" class="btn btn-sm btn-primary">Download</a>
+                                            {% endif %}
+                                            <a href="{{ url_for('pdf.view_results', filename=pdf_name) }}" class="btn btn-sm btn-info">View Results</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No processed files yet</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-file-earmark-code"></i> Training Files</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Filename</th>
+                                <th>Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if training_files %}
+                                {% for file in training_files %}
+                                    <tr>
+                                        <td>{{ file }}</td>
+                                        <td>
+                                            {% if file.endswith('_training_data.json') %}
+                                                Training Data (JSON)
+                                            {% elif file.endswith('_ollama_format.txt') %}
+                                                Ollama Format
+                                            {% else %}
+                                                Other
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% set pdf_name = file.split('_')[0] + '.pdf' %}
+                                            {% if file.endswith('_training_data.json') %}
+                                                <a href="{{ url_for('pdf.download_results', filename=pdf_name, result_type='training_data') }}" class="btn btn-sm btn-primary">Download</a>
+                                            {% elif file.endswith('_ollama_format.txt') %}
+                                                <a href="{{ url_for('pdf.download_results', filename=pdf_name, result_type='ollama_format') }}" class="btn btn-sm btn-primary">Download</a>
+                                            {% endif %}
+                                            <a href="{{ url_for('ollama.index') }}" class="btn btn-sm btn-success">Use in Ollama</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No training files yet</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

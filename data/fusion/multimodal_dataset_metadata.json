@@ -1,0 +1,11 @@
+{
+  "source_files": {
+    "terrain": "terrain_processed_mola_megdr_4.csv",
+    "spectral": null,
+    "thermal": null,
+    "environmental": null
+  },
+  "num_features": 8,
+  "num_samples": 253061,
+  "coordinate_system": "areocentric"
+}

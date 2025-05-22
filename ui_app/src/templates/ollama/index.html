@@ -1,0 +1,602 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-robot"></i> Ollama Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="ollama-status">
+                    <p>Checking Ollama server status...</p>
+                </div>
+                <div class="mt-3">
+                    <button id="refresh-status" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh Status
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-cloud-download"></i> Pull Model</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('ollama.pull_model') }}" method="post">
+                    <div class="mb-3">
+                        <label for="model_name" class="form-label">Model Name</label>
+                        <input type="text" class="form-control" id="model_name" name="model_name" placeholder="e.g., llama2, mistral, gemma" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Pull Model</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-plus-circle"></i> Create Custom Model</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('ollama.create_model') }}" method="post">
+                    <div class="mb-3">
+                        <label for="model_name" class="form-label">New Model Name</label>
+                        <input type="text" class="form-control" id="model_name" name="model_name" placeholder="e.g., mars-habitat-llm" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="base_model" class="form-label">Base Model</label>
+                        <select class="form-select" id="base_model" name="base_model" required>
+                            {% for model in models %}
+                                <option value="{{ model }}">{{ model }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="system_prompt" class="form-label">System Prompt</label>
+                        <textarea class="form-control" id="system_prompt" name="system_prompt" rows="3" placeholder="You are an AI assistant specialized in Mars habitat resource management."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-info w-100">Create Model</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0"><i class="bi bi-list-check"></i> Available Models</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Model Name</th>
+                                <th>Size</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="models-list">
+                            {% if models %}
+                                {% for model in models %}
+                                    <tr>
+                                        <td>{{ model }}</td>
+                                        <td>-</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-primary generate-btn" data-model="{{ model }}">Generate</button>
+                                                <button type="button" class="btn btn-sm btn-success json-btn" data-model="{{ model }}">Generate JSON</button>
+                                                <button type="button" class="btn btn-sm btn-info action-btn" data-model="{{ model }}">Select Action</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No models available</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-gear-fill"></i> Fine-tune Model</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('ollama.finetune_model') }}" method="post">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="model_name" class="form-label">Model to Fine-tune</label>
+                                <select class="form-select" id="model_name" name="model_name" required>
+                                    {% for model in models %}
+                                        <option value="{{ model }}">{{ model }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="training_file" class="form-label">Training Data File</label>
+                                <select class="form-select" id="training_file" name="training_file" required>
+                                    {% for file in training_files %}
+                                        <option value="{{ file }}">{{ file }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100">Fine-tune Model</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-chat-dots"></i> Test Model</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="test-model" class="form-label">Select Model</label>
+                    <select class="form-select" id="test-model">
+                        {% for model in models %}
+                            <option value="{{ model }}">{{ model }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="test-prompt" class="form-label">Prompt</label>
+                    <textarea class="form-control" id="test-prompt" rows="3" placeholder="Enter your prompt here..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="test-temperature" class="form-label">Temperature: <span id="temp-value">0.7</span></label>
+                            <input type="range" class="form-range" id="test-temperature" min="0" max="1" step="0.1" value="0.7">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="test-max-tokens" class="form-label">Max Tokens: <span id="tokens-value">2048</span></label>
+                            <input type="range" class="form-range" id="test-max-tokens" min="256" max="4096" step="256" value="2048">
+                        </div>
+                    </div>
+                </div>
+                <button id="test-generate" class="btn btn-secondary w-100">Generate</button>
+                
+                <div class="mt-4">
+                    <label for="test-response" class="form-label">Response</label>
+                    <div id="test-response" class="p-3 border rounded bg-light" style="min-height: 200px; max-height: 400px; overflow-y: auto;">
+                        <p class="text-muted">Response will appear here...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generate Text Modal -->
+<div class="modal fade" id="generateModal" tabindex="-1" aria-labelledby="generateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="generateModalLabel">Generate Text</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="generate-form">
+                    <input type="hidden" id="generate-model" name="model_name">
+                    <div class="mb-3">
+                        <label for="generate-prompt" class="form-label">Prompt</label>
+                        <textarea class="form-control" id="generate-prompt" name="prompt" rows="5" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="generate-temperature" class="form-label">Temperature: <span id="generate-temp-value">0.7</span></label>
+                                <input type="range" class="form-range" id="generate-temperature" name="temperature" min="0" max="1" step="0.1" value="0.7">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="generate-max-tokens" class="form-label">Max Tokens: <span id="generate-tokens-value">2048</span></label>
+                                <input type="range" class="form-range" id="generate-max-tokens" name="max_tokens" min="256" max="4096" step="256" value="2048">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="generate-response" class="form-label">Response</label>
+                        <div id="generate-response" class="p-3 border rounded bg-light" style="min-height: 200px; max-height: 400px; overflow-y: auto;">
+                            <p class="text-muted">Response will appear here...</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="generate-submit">Generate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generate JSON Modal -->
+<div class="modal fade" id="jsonModal" tabindex="-1" aria-labelledby="jsonModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="jsonModalLabel">Generate Structured JSON</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="json-form">
+                    <input type="hidden" id="json-model" name="model_name">
+                    <div class="mb-3">
+                        <label for="json-prompt" class="form-label">Prompt</label>
+                        <textarea class="form-control" id="json-prompt" name="prompt" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="json-schema" class="form-label">JSON Schema</label>
+                        <textarea class="form-control" id="json-schema" name="schema" rows="5" required>{
+  "type": "object",
+  "properties": {
+    "resource_allocation": {
+      "type": "object",
+      "properties": {
+        "power": { "type": "number" },
+        "water": { "type": "number" },
+        "oxygen": { "type": "number" }
+      }
+    },
+    "priority_tasks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "risk_assessment": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"]
+    }
+  }
+}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="json-temperature" class="form-label">Temperature: <span id="json-temp-value">0.2</span></label>
+                        <input type="range" class="form-range" id="json-temperature" name="temperature" min="0" max="1" step="0.1" value="0.2">
+                    </div>
+                    <div class="mb-3">
+                        <label for="json-response" class="form-label">Response</label>
+                        <div id="json-response" class="p-3 border rounded bg-light" style="min-height: 200px; max-height: 400px; overflow-y: auto; font-family: monospace;">
+                            <p class="text-muted">JSON response will appear here...</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="json-submit">Generate JSON</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Select Action Modal -->
+<div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="actionModalLabel">Select Action for Mars Habitat</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="action-form">
+                    <input type="hidden" id="action-model" name="model_name">
+                    <div class="mb-3">
+                        <label for="action-state" class="form-label">Habitat State (JSON)</label>
+                        <textarea class="form-control" id="action-state" name="state" rows="8" required>{
+  "environment": {
+    "temperature": -60,
+    "pressure": 700,
+    "radiation": 0.5,
+    "dust_opacity": 0.3
+  },
+  "resources": {
+    "power": 75,
+    "water": 450,
+    "oxygen": 180,
+    "food": 250,
+    "spare_parts": 40
+  },
+  "systems": {
+    "power_generation": "operational",
+    "life_support": "operational",
+    "isru": "operational",
+    "thermal_control": "warning"
+  }
+}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="action-mode" class="form-label">Decision Mode</label>
+                        <select class="form-select" id="action-mode" name="mode">
+                            <option value="llm">LLM Only</option>
+                            <option value="rl">RL Only</option>
+                            <option value="hybrid">Hybrid (LLM+RL)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="action-response" class="form-label">Recommended Action</label>
+                        <div id="action-response" class="p-3 border rounded bg-light" style="min-height: 200px; max-height: 400px; overflow-y: auto;">
+                            <p class="text-muted">Action recommendation will appear here...</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-info" id="action-submit">Get Recommendation</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Check Ollama status on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        checkOllamaStatus();
+        
+        // Set up event listeners for range inputs
+        document.getElementById('test-temperature').addEventListener('input', function() {
+            document.getElementById('temp-value').textContent = this.value;
+        });
+        
+        document.getElementById('test-max-tokens').addEventListener('input', function() {
+            document.getElementById('tokens-value').textContent = this.value;
+        });
+        
+        document.getElementById('generate-temperature').addEventListener('input', function() {
+            document.getElementById('generate-temp-value').textContent = this.value;
+        });
+        
+        document.getElementById('generate-max-tokens').addEventListener('input', function() {
+            document.getElementById('generate-tokens-value').textContent = this.value;
+        });
+        
+        document.getElementById('json-temperature').addEventListener('input', function() {
+            document.getElementById('json-temp-value').textContent = this.value;
+        });
+        
+        // Set up event listeners for buttons
+        document.getElementById('refresh-status').addEventListener('click', checkOllamaStatus);
+        document.getElementById('test-generate').addEventListener('click', testGenerate);
+        document.getElementById('generate-submit').addEventListener('click', submitGenerate);
+        document.getElementById('json-submit').addEventListener('click', submitGenerateJSON);
+        document.getElementById('action-submit').addEventListener('click', submitSelectAction);
+        
+        // Set up event listeners for modal buttons
+        document.querySelectorAll('.generate-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                document.getElementById('generate-model').value = this.dataset.model;
+                document.getElementById('generateModalLabel').textContent = 'Generate Text with ' + this.dataset.model;
+                document.getElementById('generate-response').innerHTML = '<p class="text-muted">Response will appear here...</p>';
+                new bootstrap.Modal(document.getElementById('generateModal')).show();
+            });
+        });
+        
+        document.querySelectorAll('.json-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                document.getElementById('json-model').value = this.dataset.model;
+                document.getElementById('jsonModalLabel').textContent = 'Generate JSON with ' + this.dataset.model;
+                document.getElementById('json-response').innerHTML = '<p class="text-muted">JSON response will appear here...</p>';
+                new bootstrap.Modal(document.getElementById('jsonModal')).show();
+            });
+        });
+        
+        document.querySelectorAll('.action-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                document.getElementById('action-model').value = this.dataset.model;
+                document.getElementById('actionModalLabel').textContent = 'Select Action with ' + this.dataset.model;
+                document.getElementById('action-response').innerHTML = '<p class="text-muted">Action recommendation will appear here...</p>';
+                new bootstrap.Modal(document.getElementById('actionModal')).show();
+            });
+        });
+    });
+    
+    // Check Ollama server status
+    function checkOllamaStatus() {
+        const statusDiv = document.getElementById('ollama-status');
+        statusDiv.innerHTML = '<p>Checking Ollama server status...</p>';
+        
+        fetch("{{ url_for('ollama.status') }}")
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'online') {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> Ollama server is online
+                        </div>
+                        <p>Available models: ${data.models.length}</p>
+                        <ul>
+                            ${data.models.map(model => `<li>${model}</li>`).join('')}
+                        </ul>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i> Ollama server is offline
+                        </div>
+                        <p>Error: ${data.error}</p>
+                        <p>Please make sure Ollama is installed and running.</p>
+                        <p>Installation instructions: <a href="https://ollama.ai/download" target="_blank">https://ollama.ai/download</a></p>
+                    `;
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Error checking Ollama status
+                    </div>
+                    <p>Error: ${error.message}</p>
+                    <p>Please make sure Ollama is installed and running.</p>
+                    <p>Installation instructions: <a href="https://ollama.ai/download" target="_blank">https://ollama.ai/download</a></p>
+                `;
+            });
+    }
+    
+    // Test generate function
+    function testGenerate() {
+        const model = document.getElementById('test-model').value;
+        const prompt = document.getElementById('test-prompt').value;
+        const temperature = document.getElementById('test-temperature').value;
+        const maxTokens = document.getElementById('test-max-tokens').value;
+        const responseDiv = document.getElementById('test-response');
+        
+        if (!prompt) {
+            alert('Please enter a prompt');
+            return;
+        }
+        
+        responseDiv.innerHTML = '<p>Generating response...</p>';
+        
+        const formData = new FormData();
+        formData.append('model_name', model);
+        formData.append('prompt', prompt);
+        formData.append('temperature', temperature);
+        formData.append('max_tokens', maxTokens);
+        
+        fetch("{{ url_for('ollama.generate_text') }}", {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    responseDiv.innerHTML = `<p class="text-danger">Error: ${data.error}</p>`;
+                } else {
+                    responseDiv.innerHTML = `<p>${data.response.replace(/\n/g, '<br>')}</p>`;
+                }
+            })
+            .catch(error => {
+                responseDiv.innerHTML = `<p class="text-danger">Error: ${error.message}</p>`;
+            });
+    }
+    
+    // Submit generate form
+    function submitGenerate() {
+        const model = document.getElementById('generate-model').value;
+        const prompt = document.getElementById('generate-prompt').value;
+        const temperature = document.getElementById('generate-temperature').value;
+        const maxTokens = document.getElementById('generate-max-tokens').value;
+        const responseDiv = document.getElementById('generate-response');
+        
+        if (!prompt) {
+            alert('Please enter a prompt');
+            return;
+        }
+        
+        responseDiv.innerHTML = '<p>Generating response...</p>';
+        
+        const formData = new FormData();
+        formData.append('model_name', model);
+        formData.append('prompt', prompt);
+        formData.append('temperature', temperature);
+        formData.append('max_tokens', maxTokens);
+        
+        fetch("{{ url_for('ollama.generate_text') }}", {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    responseDiv.innerHTML = `<p class="text-danger">Error: ${data.error}</p>`;
+                } else {
+                    responseDiv.innerHTML = `<p>${data.response.replace(/\n/g, '<br>')}</p>`;
+                }
+            })
+            .catch(error => {
+                responseDiv.innerHTML = `<p class="text-danger">Error: ${error.message}</p>`;
+            });
+    }
+    
+    // Submit generate JSON form
+    function submitGenerateJSON() {
+        const model = document.getElementById('json-model').value;
+        const prompt = document.getElementById('json-prompt').value;
+        const schema = document.getElementById('json-schema').value;
+        const temperature = document.getElementById('json-temperature').value;
+        const responseDiv = document.getElementById('json-response');
+        
+        if (!prompt || !schema) {
+            alert('Please enter a prompt and schema');
+            return;
+        }
+        
+        responseDiv.innerHTML = '<p>Generating JSON response...</p>';
+        
+        const formData = new FormData();
+        formData.append('model_name', model);
+        formData.append('prompt', prompt);
+        formData.append('schema', schema);
+        formData.append('temperature', temperature);
+        
+        fetch("{{ url_for('ollama.generate_json') }}", {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    responseDiv.innerHTML = `<p class="text-danger">Error: ${data.error}</p>`;
+                } else {
+                    responseDiv.innerHTML = `<pre>${JSON.stringify(data.parsed_json, null, 2)}</pre>`;
+                }
+            })
+            .catch(error => {
+                responseDiv.innerHTML = `<p class="text-danger">Error: ${error.message}</p>`;
+            });
+    }
+    
+    // Submit select action form
+    function submitSelectAction() {
+        const model = document.getElementById('action-model').value;
+        const state = document.getElementById('action-state').value;
+        const mode = document.getElementById('action-mode').value;
+        const responseDiv = document.getElementById('action-response');
+        
+        if (!state) {
+            alert('Please enter a state');
+            return;
+        }
+        
+        responseDiv.innerHTML = '<p>Selecting action...</p>';
+        
+        const formData = new FormData();
+        formData.append('model_name', model);
+        formData.append('state', state);
+        formData.append('mode', mode);
+        
+        fetch("{{ url_for('ollama.select_action') }}", {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    responseDiv.innerHTML = `<p class="text-danger">Error: ${data.error}</p>`;
+                } else {
+                    responseDiv.innerHTML = `
+                        <h5>Recommended Action:</h5>
+                        <pre>${JSON.stringify(data.action, null, 2)}</pre>
+                        <h5>Explanation:</h5>
+                        <p>${data.explanation.replace(/\n/g, '<br>')}</p>
+                    `;
+                }
+            })
+            .catch(error => {
+                responseDiv.innerHTML = `<p class="text-danger">Error: ${error.message}</p>`;
+            });
+    }
+</script>
+{% endblock %}

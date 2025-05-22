@@ -1,0 +1,478 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-cpu"></i> Simulation Controls</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('simulation.start_simulation') }}" method="post">
+                    <div class="mb-3">
+                        <label for="simulation_type" class="form-label">Simulation Type</label>
+                        <select class="form-select" id="simulation_type" name="simulation_type" required>
+                            <option value="standard">Standard Mars Habitat</option>
+                            <option value="dust_storm">Dust Storm Scenario</option>
+                            <option value="equipment_failure">Equipment Failure Scenario</option>
+                            <option value="long_term">Long-term Planning (1 Year)</option>
+                            <option value="custom">Custom Scenario</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ai_mode" class="form-label">AI Decision Mode</label>
+                        <select class="form-select" id="ai_mode" name="ai_mode" required>
+                            <option value="rl">Reinforcement Learning</option>
+                            <option value="llm">Large Language Model</option>
+                            <option value="hybrid">Hybrid (RL+LLM)</option>
+                            <option value="manual">Manual Control</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="duration" class="form-label">Duration (Mars Sols)</label>
+                        <input type="number" class="form-control" id="duration" name="duration" min="1" max="1000" value="100" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Start Simulation</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-gear"></i> Simulation Settings</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('simulation.update_settings') }}" method="post">
+                    <div class="mb-3">
+                        <label for="initial_power" class="form-label">Initial Power (%)</label>
+                        <input type="range" class="form-range" id="initial_power" name="initial_power" min="10" max="100" value="80">
+                        <div class="text-end"><span id="power_value">80</span>%</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="initial_water" class="form-label">Initial Water (%)</label>
+                        <input type="range" class="form-range" id="initial_water" name="initial_water" min="10" max="100" value="75">
+                        <div class="text-end"><span id="water_value">75</span>%</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="initial_oxygen" class="form-label">Initial Oxygen (%)</label>
+                        <input type="range" class="form-range" id="initial_oxygen" name="initial_oxygen" min="10" max="100" value="90">
+                        <div class="text-end"><span id="oxygen_value">90</span>%</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="initial_food" class="form-label">Initial Food (%)</label>
+                        <input type="range" class="form-range" id="initial_food" name="initial_food" min="10" max="100" value="85">
+                        <div class="text-end"><span id="food_value">85</span>%</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="crew_size" class="form-label">Crew Size</label>
+                        <input type="number" class="form-control" id="crew_size" name="crew_size" min="1" max="12" value="4" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Update Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-graph-up"></i> Simulation Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="simulation-status">
+                    {% if simulation_active %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-play-circle"></i> Simulation is currently running
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Current Sol:</strong> {{ current_sol }}</p>
+                                <p><strong>Scenario:</strong> {{ scenario_type }}</p>
+                                <p><strong>AI Mode:</strong> {{ ai_mode }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Start Time:</strong> {{ start_time }}</p>
+                                <p><strong>Elapsed Time:</strong> {{ elapsed_time }}</p>
+                                <p><strong>Status:</strong> {{ status }}</p>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-center mt-3">
+                            <form action="{{ url_for('simulation.pause_simulation') }}" method="post" class="me-2">
+                                <button type="submit" class="btn btn-warning">Pause Simulation</button>
+                            </form>
+                            <form action="{{ url_for('simulation.stop_simulation') }}" method="post">
+                                <button type="submit" class="btn btn-danger">Stop Simulation</button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-secondary">
+                            <i class="bi bi-stop-circle"></i> No simulation is currently running
+                        </div>
+                        <p>Configure simulation parameters and click "Start Simulation" to begin.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0"><i class="bi bi-bar-chart"></i> Resource Levels</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <canvas id="resourceChart" width="400" height="300"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Current</th>
+                                        <th>Trend</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Power</td>
+                                        <td>{{ resources.power }}%</td>
+                                        <td>
+                                            {% if resource_trends.power > 0 %}
+                                                <span class="text-success"><i class="bi bi-arrow-up"></i> {{ resource_trends.power }}%</span>
+                                            {% elif resource_trends.power < 0 %}
+                                                <span class="text-danger"><i class="bi bi-arrow-down"></i> {{ resource_trends.power|abs }}%</span>
+                                            {% else %}
+                                                <span class="text-secondary"><i class="bi bi-dash"></i> 0%</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Water</td>
+                                        <td>{{ resources.water }}%</td>
+                                        <td>
+                                            {% if resource_trends.water > 0 %}
+                                                <span class="text-success"><i class="bi bi-arrow-up"></i> {{ resource_trends.water }}%</span>
+                                            {% elif resource_trends.water < 0 %}
+                                                <span class="text-danger"><i class="bi bi-arrow-down"></i> {{ resource_trends.water|abs }}%</span>
+                                            {% else %}
+                                                <span class="text-secondary"><i class="bi bi-dash"></i> 0%</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Oxygen</td>
+                                        <td>{{ resources.oxygen }}%</td>
+                                        <td>
+                                            {% if resource_trends.oxygen > 0 %}
+                                                <span class="text-success"><i class="bi bi-arrow-up"></i> {{ resource_trends.oxygen }}%</span>
+                                            {% elif resource_trends.oxygen < 0 %}
+                                                <span class="text-danger"><i class="bi bi-arrow-down"></i> {{ resource_trends.oxygen|abs }}%</span>
+                                            {% else %}
+                                                <span class="text-secondary"><i class="bi bi-dash"></i> 0%</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Food</td>
+                                        <td>{{ resources.food }}%</td>
+                                        <td>
+                                            {% if resource_trends.food > 0 %}
+                                                <span class="text-success"><i class="bi bi-arrow-up"></i> {{ resource_trends.food }}%</span>
+                                            {% elif resource_trends.food < 0 %}
+                                                <span class="text-danger"><i class="bi bi-arrow-down"></i> {{ resource_trends.food|abs }}%</span>
+                                            {% else %}
+                                                <span class="text-secondary"><i class="bi bi-dash"></i> 0%</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Spare Parts</td>
+                                        <td>{{ resources.spare_parts }}%</td>
+                                        <td>
+                                            {% if resource_trends.spare_parts > 0 %}
+                                                <span class="text-success"><i class="bi bi-arrow-up"></i> {{ resource_trends.spare_parts }}%</span>
+                                            {% elif resource_trends.spare_parts < 0 %}
+                                                <span class="text-danger"><i class="bi bi-arrow-down"></i> {{ resource_trends.spare_parts|abs }}%</span>
+                                            {% else %}
+                                                <span class="text-secondary"><i class="bi bi-dash"></i> 0%</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-journal-text"></i> Simulation Log</h5>
+            </div>
+            <div class="card-body">
+                <div id="simulation-log" class="p-3 border rounded bg-light" style="height: 300px; overflow-y: auto;">
+                    {% if simulation_log %}
+                        {% for entry in simulation_log %}
+                            <p class="mb-1">
+                                <span class="text-secondary">[Sol {{ entry.sol }}]</span>
+                                {% if entry.type == 'info' %}
+                                    <span class="text-info"><i class="bi bi-info-circle"></i></span>
+                                {% elif entry.type == 'warning' %}
+                                    <span class="text-warning"><i class="bi bi-exclamation-triangle"></i></span>
+                                {% elif entry.type == 'error' %}
+                                    <span class="text-danger"><i class="bi bi-exclamation-circle"></i></span>
+                                {% elif entry.type == 'success' %}
+                                    <span class="text-success"><i class="bi bi-check-circle"></i></span>
+                                {% endif %}
+                                {{ entry.message }}
+                            </p>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No simulation log entries yet.</p>
+                    {% endif %}
+                </div>
+                <div class="mt-3">
+                    <button id="export-log" class="btn btn-outline-secondary">Export Log</button>
+                    <button id="clear-log" class="btn btn-outline-danger">Clear Log</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Scenario Modal -->
+<div class="modal fade" id="customScenarioModal" tabindex="-1" aria-labelledby="customScenarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customScenarioModalLabel">Configure Custom Scenario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="custom-scenario-form">
+                    <div class="mb-3">
+                        <label for="scenario_name" class="form-label">Scenario Name</label>
+                        <input type="text" class="form-control" id="scenario_name" name="scenario_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="scenario_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="scenario_description" name="scenario_description" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="dust_storm_probability" class="form-label">Dust Storm Probability (%)</label>
+                                <input type="range" class="form-range" id="dust_storm_probability" name="dust_storm_probability" min="0" max="100" value="20">
+                                <div class="text-end"><span id="dust_storm_value">20</span>%</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="equipment_failure_probability" class="form-label">Equipment Failure Probability (%)</label>
+                                <input type="range" class="form-range" id="equipment_failure_probability" name="equipment_failure_probability" min="0" max="100" value="15">
+                                <div class="text-end"><span id="equipment_failure_value">15</span>%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="solar_efficiency" class="form-label">Solar Panel Efficiency (%)</label>
+                                <input type="range" class="form-range" id="solar_efficiency" name="solar_efficiency" min="10" max="100" value="70">
+                                <div class="text-end"><span id="solar_efficiency_value">70</span>%</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="isru_efficiency" class="form-label">ISRU Efficiency (%)</label>
+                                <input type="range" class="form-range" id="isru_efficiency" name="isru_efficiency" min="10" max="100" value="60">
+                                <div class="text-end"><span id="isru_efficiency_value">60</span>%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="custom_events" class="form-label">Custom Events (JSON)</label>
+                        <textarea class="form-control" id="custom_events" name="custom_events" rows="5">[
+  {"sol": 10, "type": "dust_storm", "severity": 0.7, "duration": 5},
+  {"sol": 30, "type": "equipment_failure", "system": "life_support", "severity": 0.5},
+  {"sol": 50, "type": "supply_delivery", "resources": {"food": 20, "spare_parts": 15}}
+]</textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-custom-scenario">Save Scenario</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize resource chart
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up event listeners for range inputs
+        document.getElementById('initial_power').addEventListener('input', function() {
+            document.getElementById('power_value').textContent = this.value;
+        });
+        
+        document.getElementById('initial_water').addEventListener('input', function() {
+            document.getElementById('water_value').textContent = this.value;
+        });
+        
+        document.getElementById('initial_oxygen').addEventListener('input', function() {
+            document.getElementById('oxygen_value').textContent = this.value;
+        });
+        
+        document.getElementById('initial_food').addEventListener('input', function() {
+            document.getElementById('food_value').textContent = this.value;
+        });
+        
+        // Show custom scenario modal when custom is selected
+        document.getElementById('simulation_type').addEventListener('change', function() {
+            if (this.value === 'custom') {
+                new bootstrap.Modal(document.getElementById('customScenarioModal')).show();
+            }
+        });
+        
+        // Set up event listeners for custom scenario modal
+        document.getElementById('dust_storm_probability').addEventListener('input', function() {
+            document.getElementById('dust_storm_value').textContent = this.value;
+        });
+        
+        document.getElementById('equipment_failure_probability').addEventListener('input', function() {
+            document.getElementById('equipment_failure_value').textContent = this.value;
+        });
+        
+        document.getElementById('solar_efficiency').addEventListener('input', function() {
+            document.getElementById('solar_efficiency_value').textContent = this.value;
+        });
+        
+        document.getElementById('isru_efficiency').addEventListener('input', function() {
+            document.getElementById('isru_efficiency_value').textContent = this.value;
+        });
+        
+        // Save custom scenario
+        document.getElementById('save-custom-scenario').addEventListener('click', function() {
+            // Here you would normally save the custom scenario to the server
+            // For now, we'll just close the modal
+            bootstrap.Modal.getInstance(document.getElementById('customScenarioModal')).hide();
+        });
+        
+        // Export log button
+        document.getElementById('export-log').addEventListener('click', function() {
+            // Here you would normally export the log to a file
+            alert('Log exported successfully');
+        });
+        
+        // Clear log button
+        document.getElementById('clear-log').addEventListener('click', function() {
+            // Here you would normally clear the log
+            document.getElementById('simulation-log').innerHTML = '<p class="text-muted">Log cleared.</p>';
+        });
+        
+        // Initialize resource chart
+        const ctx = document.getElementById('resourceChart').getContext('2d');
+        const resourceChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Power', 'Water', 'Oxygen', 'Food', 'Spare Parts'],
+                datasets: [{
+                    label: 'Resource Levels (%)',
+                    data: [
+                        {{ resources.power }}, 
+                        {{ resources.water }}, 
+                        {{ resources.oxygen }}, 
+                        {{ resources.food }}, 
+                        {{ resources.spare_parts }}
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+        
+        // If simulation is active, set up periodic updates
+        {% if simulation_active %}
+            setInterval(function() {
+                fetch("{{ url_for('simulation.status') }}")
+                    .then(response => response.json())
+                    .then(data => {
+                        // Update resource chart
+                        resourceChart.data.datasets[0].data = [
+                            data.resources.power,
+                            data.resources.water,
+                            data.resources.oxygen,
+                            data.resources.food,
+                            data.resources.spare_parts
+                        ];
+                        resourceChart.update();
+                        
+                        // Update resource table
+                        document.querySelector('td:nth-child(2)').textContent = data.resources.power + '%';
+                        document.querySelectorAll('td:nth-child(2)')[1].textContent = data.resources.water + '%';
+                        document.querySelectorAll('td:nth-child(2)')[2].textContent = data.resources.oxygen + '%';
+                        document.querySelectorAll('td:nth-child(2)')[3].textContent = data.resources.food + '%';
+                        document.querySelectorAll('td:nth-child(2)')[4].textContent = data.resources.spare_parts + '%';
+                        
+                        // Update simulation status
+                        document.querySelector('#simulation-status .row .col-md-6 p:first-child').innerHTML = '<strong>Current Sol:</strong> ' + data.current_sol;
+                        document.querySelector('#simulation-status .row .col-md-6:nth-child(2) p:nth-child(2)').innerHTML = '<strong>Elapsed Time:</strong> ' + data.elapsed_time;
+                        document.querySelector('#simulation-status .row .col-md-6:nth-child(2) p:nth-child(3)').innerHTML = '<strong>Status:</strong> ' + data.status;
+                        
+                        // Update simulation log if there are new entries
+                        if (data.new_log_entries && data.new_log_entries.length > 0) {
+                            const logContainer = document.getElementById('simulation-log');
+                            for (const entry of data.new_log_entries) {
+                                const p = document.createElement('p');
+                                p.className = 'mb-1';
+                                
+                                let icon = '';
+                                if (entry.type === 'info') {
+                                    icon = '<span class="text-info"><i class="bi bi-info-circle"></i></span>';
+                                } else if (entry.type === 'warning') {
+                                    icon = '<span class="text-warning"><i class="bi bi-exclamation-triangle"></i></span>';
+                                } else if (entry.type === 'error') {
+                                    icon = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i></span>';
+                                } else if (entry.type === 'success') {
+                                    icon = '<span class="text-success"><i class="bi bi-check-circle"></i></span>';
+                                }
+                                
+                                p.innerHTML = `<span class="text-secondary">[Sol ${entry.sol}]</span> ${icon} ${entry.message}`;
+                                logContainer.appendChild(p);
+                            }
+                            
+                            // Scroll to bottom of log
+                            logContainer.scrollTop = logContainer.scrollHeight;
+                        }
+                    });
+            }, 5000); // Update every 5 seconds
+        {% endif %}
+    });
+</script>
+{% endblock %}

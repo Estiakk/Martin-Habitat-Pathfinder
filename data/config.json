@@ -1,0 +1,19 @@
+{
+  "environment": {
+    "temperature_range": [-120, 20],
+    "pressure_range": [600, 700],
+    "dust_opacity_range": [0.1, 0.9],
+    "solar_irradiance_range": [0, 600]
+  },
+  "habitat": {
+    "initial_power": 100,
+    "initial_water": 500,
+    "initial_oxygen": 200,
+    "initial_food": 300,
+    "initial_spare_parts": 50
+  },
+  "simulation": {
+    "max_steps": 500,
+    "difficulty": "normal"
+  }
+}

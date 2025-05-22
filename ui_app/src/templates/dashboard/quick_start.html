@@ -1,0 +1,187 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="bi bi-book"></i> Martian Habitat Pathfinder Quick Start Guide</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> This guide provides a quick overview of how to use the Martian Habitat Pathfinder system. For more detailed information, please refer to the comprehensive user guide.
+                </div>
+                
+                <h3>System Overview</h3>
+                <p>
+                    The Martian Habitat Pathfinder is an AI-driven resource management system for Mars habitats. It combines PDF data extraction, NASA data sources, reinforcement learning, and large language models to create a comprehensive simulation and decision-making platform.
+                </p>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="card-title mb-0">Getting Started in 5 Minutes</h5>
+                            </div>
+                            <div class="card-body">
+                                <ol>
+                                    <li class="mb-2">
+                                        <strong>Upload a PDF:</strong> Go to the <a href="{{ url_for('pdf.index') }}">PDF Management</a> page and upload a scientific paper about Mars habitats.
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Process the PDF:</strong> The system will automatically extract scientific data and parameters.
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Run a Simulation:</strong> Go to the <a href="{{ url_for('simulation.index') }}">Simulation</a> page and start a standard simulation.
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>View Results:</strong> Monitor resource levels and simulation logs to see how the AI manages the habitat.
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Try Different AI Modes:</strong> Experiment with RL, LLM, and hybrid decision-making approaches.
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="card-title mb-0">Key Features</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul>
+                                    <li class="mb-2">
+                                        <strong>PDF Data Extraction:</strong> Automatically extract scientific data from research papers.
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>NASA Data Integration:</strong> Incorporate real Mars data from NASA sources.
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Reinforcement Learning:</strong> AI agents trained to optimize resource allocation.
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Large Language Models:</strong> Use Ollama to run LLMs for decision-making and explanations.
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Simulation Environment:</strong> Test different scenarios like dust storms and equipment failures.
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong>Visualization:</strong> Monitor resource levels and trends in real-time.
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="mt-4">Main Components</h3>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="card-title mb-0">PDF Management</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Upload and process scientific papers about Mars habitats.</p>
+                                <a href="{{ url_for('pdf.index') }}" class="btn btn-outline-info btn-sm">Open PDF Management</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="card-title mb-0">Data Management</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Fetch NASA data and run the data processing pipeline.</p>
+                                <a href="{{ url_for('data.index') }}" class="btn btn-outline-success btn-sm">Open Data Management</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="card-title mb-0">Ollama LLM</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Configure and fine-tune large language models with Ollama.</p>
+                                <a href="{{ url_for('ollama.index') }}" class="btn btn-outline-warning btn-sm">Open Ollama LLM</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="card-title mb-0">Simulation</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>Run Mars habitat simulations with different AI decision modes.</p>
+                                <a href="{{ url_for('simulation.index') }}" class="btn btn-outline-danger btn-sm">Open Simulation</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="mt-4">Recommended Workflows</h3>
+                <p>For detailed workflow recommendations, visit the <a href="{{ url_for('dashboard.workflow') }}">Workflow</a> page.</p>
+                
+                <h3 class="mt-4">Troubleshooting</h3>
+                <div class="accordion" id="troubleshootingAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                PDF Processing Issues
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Ensure PDFs are not password-protected or encrypted</li>
+                                    <li>Check that PDFs contain text (not just scanned images)</li>
+                                    <li>Try processing PDFs individually rather than in batch</li>
+                                    <li>Check the system logs for specific error messages</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                Ollama Connection Issues
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Ensure Ollama is installed and running on your system</li>
+                                    <li>Check that the Ollama server is accessible at http://localhost:11434</li>
+                                    <li>Restart Ollama if it's not responding</li>
+                                    <li>Make sure you have sufficient disk space for model downloads</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                Simulation Performance Issues
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#troubleshootingAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li>Reduce the simulation duration for faster results</li>
+                                    <li>Use RL mode instead of LLM mode for better performance</li>
+                                    <li>Close other resource-intensive applications</li>
+                                    <li>Check system resource usage in the dashboard</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

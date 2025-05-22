@@ -1,0 +1,7 @@
+{
+  "source": "Mars Orbiter Laser Altimeter",
+  "product_type": "MEGDR",
+  "resolution": "4 pixels/degree",
+  "download_date": "2025-05-21",
+  "data_type": "Topography (elevation in meters)"
+}
