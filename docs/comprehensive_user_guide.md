@@ -47,7 +47,7 @@ The Martian Habitat Pathfinder consists of several integrated components:
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-organization/martian-habitat-pathfinder.git
+   git clone https://github.com/Estiakk/martian-habitat-pathfinder.git
    cd martian-habitat-pathfinder
    ```
 
