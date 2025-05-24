@@ -6,7 +6,7 @@ This quick start guide provides essential instructions for getting started with 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-organization/martian-habitat-pathfinder.git
+git clone https://github.com/Estiakk/martian-habitat-pathfinder.git
 cd martian-habitat-pathfinder
 ```
 
