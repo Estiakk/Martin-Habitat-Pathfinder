@@ -98,7 +98,11 @@ def view_nasa_data(data_type):
     # Initialize data pipeline
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     data_dir = os.path.join(project_root, 'data')
-    nasa_dir = os.path.join(data_dir, 'nasa', data_type)
+    nasa_dir = os.path.normpath(os.path.join(data_dir, 'nasa', data_type))
+    
+    if not nasa_dir.startswith(os.path.join(data_dir, 'nasa')):
+        flash(f'Invalid NASA data type: {data_type}', 'error')
+        return redirect(url_for('data.index'))
     
     if not os.path.exists(nasa_dir):
         flash(f'NASA data directory for {data_type} not found', 'error')
