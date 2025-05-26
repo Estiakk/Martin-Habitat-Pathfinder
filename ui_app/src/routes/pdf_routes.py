@@ -105,7 +105,11 @@ def upload_pdf():
 @pdf_bp.route('/process/<filename>', methods=['GET', 'POST'])
 def process_pdf(filename):
     """Process a PDF file to extract data."""
-    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+    file_path = os.path.normpath(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
+    
+    if not file_path.startswith(os.path.abspath(current_app.config['UPLOAD_FOLDER'])):
+        flash('Invalid file path', 'error')
+        return redirect(url_for('pdf.index'))
     
     if not os.path.exists(file_path):
         flash(f'File {filename} not found', 'error')
