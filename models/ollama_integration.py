@@ -79,7 +79,14 @@ class OllamaClient:
             
         # Create a unique key based on model, prompt and parameters
         cache_key = f"{model}_{hash(prompt)}_{hash(str(params))}"
-        return os.path.join(self.cache_dir, f"{cache_key}.json")
+        cache_path = os.path.join(self.cache_dir, f"{cache_key}.json")
+        
+        # Normalize and validate the cache path
+        normalized_path = os.path.normpath(cache_path)
+        if not normalized_path.startswith(os.path.normpath(self.cache_dir)):
+            raise ValueError("Invalid cache path: Path traversal detected")
+        
+        return normalized_path
     
     def _check_cache(self, cache_path: str) -> Optional[Dict[str, Any]]:
         """Check if a cached response exists and is valid."""
