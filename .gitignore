@@ -1,0 +1,105 @@
+# .gitignore for Martin-Habitat-Pathfinder
+
+# Python
+__pycache__/
+*.pyc
+*.pyd
+*.so
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+pip-log.txt
+pip-delete-this-arg-when-done.log
+.python-version
+
+# IDEs and Editors
+.idea/                  # IntelliJ IDEA / PyCharm
+.vscode/                # VS Code
+*.sublime-project
+*.sublime-workspace
+.DS_Store               # macOS
+Thumbs.db               # Windows
+
+# Compiled/Generated files
+build/
+dist/
+*.o
+*.a
+*.lib
+*.dll
+*.exe
+*.obj
+*.out
+*.bin
+
+# Data and Models (be careful with these, only ignore if they are generated or very large)
+# If 'data/' contains raw, version-controlled data, do NOT ignore the directory.
+# If 'models/' contains trained models that are part of the repo, do NOT ignore.
+# The following assumes these are generated outputs or temporary files.
+# Adjust as needed based on specific data/model management.
+data/processed/         # Processed data that can be re-generated
+data/temp/              # Temporary data files
+logs/                   # Log files
+results/                # Simulation or analysis results
+output/                 # General output directory
+
+# Specific large data files (example patterns, adjust as needed)
+*.csv.zip
+*.hdf5
+*.pkl
+*.npy
+*.npz
+*.sqlite
+*.db
+
+# Machine Learning / Deep Learning specific
+# Trained models (if not meant to be version controlled, e.g., too large)
+models/*.pt             # PyTorch models
+models/*.pth
+models/*.onnx           # ONNX models
+models/*.h5             # Keras/TensorFlow models
+models/*.pb             # TensorFlow GraphDef
+models/*.ckpt           # TensorFlow checkpoints
+models/*.tflite         # TensorFlow Lite models
+models/*.bin            # Binary model files
+
+# LLM specific (e.g., Ollama downloaded models, caches)
+# Adjust paths based on where Ollama stores its data if within the repo structure
+ollama_models/
+ollama_cache/
+*.ollama_model
+
+# Jupyter Notebooks / IPython
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+*.nbdata
+*.nbconvert
+
+# Environment variables
+.env
+.flaskenv
+
+# Testing
+.coverage
+.coverage.*
+nosetests.xml
+coverage.xml
+
+# UI/Web specific (if applicable, e.g., for an interactive UI)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.parcel-cache/ # Parcel bundler cache
+.next/ # Next.js build output
+out/ # Static site generation output (e.g., Next.js, Hugo)
+
+# Miscellaneous
+*.log
+*.bak
+*.tmp
+*.swp
+*~
