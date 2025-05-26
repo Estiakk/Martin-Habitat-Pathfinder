@@ -136,16 +136,22 @@ def process_pdf(filename):
 @pdf_bp.route('/view/<filename>')
 def view_pdf(filename):
     """View a PDF file."""
-    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+    upload_folder = os.path.abspath(current_app.config['UPLOAD_FOLDER'])
+    sanitized_filename = secure_filename(filename)
+    file_path = os.path.normpath(os.path.join(upload_folder, sanitized_filename))
+    
+    if not file_path.startswith(upload_folder):
+        flash('Invalid file path', 'error')
+        return redirect(url_for('pdf.index'))
     
     if not os.path.exists(file_path):
-        flash(f'File {filename} not found', 'error')
+        flash(f'File {sanitized_filename} not found', 'error')
         return redirect(url_for('pdf.index'))
     
     return render_template(
         'pdf/view.html',
-        title=f"View PDF: {filename}",
-        filename=filename
+        title=f"View PDF: {sanitized_filename}",
+        filename=sanitized_filename
     )
 
 @pdf_bp.route('/download/<filename>')
