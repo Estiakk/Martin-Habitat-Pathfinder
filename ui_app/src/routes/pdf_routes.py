@@ -233,7 +233,10 @@ def view_results(filename):
 @pdf_bp.route('/download_results/<filename>/<result_type>')
 def download_results(filename, result_type):
     """Download processing results for a PDF file."""
-    # Get base name without extension
+    from werkzeug.utils import secure_filename
+    
+    # Sanitize the filename
+    filename = secure_filename(filename)
     base_name = os.path.splitext(filename)[0]
     
     # Get paths to result files
@@ -251,6 +254,12 @@ def download_results(filename, result_type):
         file_path = os.path.join(training_dir, f"{base_name}_ollama_format.txt")
     else:
         flash(f'Invalid result type: {result_type}', 'error')
+        return redirect(url_for('pdf.view_results', filename=filename))
+    
+    # Normalize and validate the file path
+    file_path = os.path.normpath(file_path)
+    if not (file_path.startswith(processed_dir) or file_path.startswith(training_dir)):
+        flash('Invalid file path', 'error')
         return redirect(url_for('pdf.view_results', filename=filename))
     
     if not os.path.exists(file_path):
