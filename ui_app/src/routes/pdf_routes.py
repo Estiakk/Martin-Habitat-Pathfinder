@@ -158,17 +158,24 @@ def download_pdf(filename):
 @pdf_bp.route('/delete/<filename>', methods=['POST'])
 def delete_pdf(filename):
     """Delete a PDF file."""
-    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+    sanitized_filename = secure_filename(filename)
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    file_path = os.path.normpath(os.path.join(upload_folder, sanitized_filename))
+    
+    # Ensure the file path is within the UPLOAD_FOLDER
+    if not file_path.startswith(os.path.abspath(upload_folder)):
+        flash('Invalid file path', 'error')
+        return redirect(url_for('pdf.index'))
     
     if not os.path.exists(file_path):
-        flash(f'File {filename} not found', 'error')
+        flash(f'File {sanitized_filename} not found', 'error')
         return redirect(url_for('pdf.index'))
     
     try:
         os.remove(file_path)
-        flash(f'File {filename} deleted successfully', 'success')
+        flash(f'File {sanitized_filename} deleted successfully', 'success')
     except Exception as e:
-        logger.error(f"Error deleting PDF {filename}: {e}")
+        logger.error(f"Error deleting PDF {sanitized_filename}: {e}")
         flash(f'Error deleting file: {str(e)}', 'error')
     
     return redirect(url_for('pdf.index'))
