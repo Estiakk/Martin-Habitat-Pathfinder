@@ -212,7 +212,14 @@ def finetune_model():
         # Get training file path
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
         training_dir = os.path.join(project_root, 'data', 'training')
-        training_file_path = os.path.join(training_dir, training_file)
+        
+        # Sanitize and validate the training file path
+        sanitized_filename = secure_filename(training_file)
+        training_file_path = os.path.normpath(os.path.join(training_dir, sanitized_filename))
+        
+        if not training_file_path.startswith(training_dir):
+            flash("Invalid training file path", "error")
+            return redirect(url_for('ollama.index'))
         
         if not os.path.exists(training_file_path):
             flash(f"Training file not found: {training_file}", "error")
