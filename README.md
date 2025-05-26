@@ -1,7 +1,8 @@
 # Martian Habitat Pathfinder
-file:///home/killer/Downloads/4d3b3316-5ad1-4419-9d1e-77314b8bbe37.png
+![4d3b3316-5ad1-4419-9d1e-77314b8bbe37](https://github.com/user-attachments/assets/9fcc7b28-6c93-4a09-8bfc-a1aff17276b9)
 
-A comprehensive project for analyzing and simulating optimal habitat locations on Mars using reinforcement learning and data-driven approaches.
+A comprehensive project for analyzing and simulating optimal habitat locations on Mars using reinforcement learning and data-d
+riven approaches.
 
 ## Project Overview
 
