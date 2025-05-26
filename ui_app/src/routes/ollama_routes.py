@@ -118,7 +118,7 @@ def status():
         logger.error(f"Ollama server status check failed: {e}")
         return jsonify({
             "status": "offline",
-            "error": str(e)
+            "error": "An internal error occurred."
         }), 500
 
 @ollama_bp.route('/models')
@@ -130,7 +130,7 @@ def list_models():
         return jsonify({"models": models})
     except Exception as e:
         logger.error(f"Failed to list models: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal error occurred."}), 500
 
 @ollama_bp.route('/pull', methods=['POST'])
 def pull_model():
@@ -148,7 +148,7 @@ def pull_model():
         return redirect(url_for('ollama.index'))
     except Exception as e:
         logger.error(f"Failed to pull model {model_name}: {e}")
-        flash(f"Failed to pull model: {e}", "error")
+        flash("Failed to pull model: An internal error occurred.", "error")
         return redirect(url_for('ollama.index'))
 
 @ollama_bp.route('/create', methods=['POST'])
