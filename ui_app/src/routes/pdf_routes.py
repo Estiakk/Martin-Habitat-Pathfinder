@@ -176,7 +176,9 @@ def delete_pdf(filename):
 @pdf_bp.route('/results/<filename>')
 def view_results(filename):
     """View processing results for a PDF file."""
-    # Get base name without extension
+    # Sanitize and validate filename
+    from werkzeug.utils import secure_filename
+    filename = secure_filename(filename)
     base_name = os.path.splitext(filename)[0]
     
     # Get paths to result files
@@ -184,10 +186,19 @@ def view_results(filename):
     processed_dir = os.path.join(project_root, 'data', 'processed')
     training_dir = os.path.join(project_root, 'data', 'training')
     
-    scientific_data_path = os.path.join(processed_dir, f"{base_name}_scientific_data.json")
-    simulation_params_path = os.path.join(processed_dir, f"{base_name}_simulation_params.json")
-    training_data_path = os.path.join(training_dir, f"{base_name}_training_data.json")
-    ollama_format_path = os.path.join(training_dir, f"{base_name}_ollama_format.txt")
+    scientific_data_path = os.path.normpath(os.path.join(processed_dir, f"{base_name}_scientific_data.json"))
+    simulation_params_path = os.path.normpath(os.path.join(processed_dir, f"{base_name}_simulation_params.json"))
+    training_data_path = os.path.normpath(os.path.join(training_dir, f"{base_name}_training_data.json"))
+    ollama_format_path = os.path.normpath(os.path.join(training_dir, f"{base_name}_ollama_format.txt"))
+    
+    # Ensure paths are within their respective directories
+    if not scientific_data_path.startswith(processed_dir) or \
+       not simulation_params_path.startswith(processed_dir) or \
+       not training_data_path.startswith(training_dir) or \
+       not ollama_format_path.startswith(training_dir):
+        logger.error(f"Invalid path traversal attempt detected for filename: {filename}")
+        flash("Invalid file path.", "error")
+        return redirect(url_for('pdf.index'))
     
     # Load data if files exist
     scientific_data = None
