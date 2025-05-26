@@ -271,7 +271,7 @@ def generate_text():
         })
     except Exception as e:
         logger.error(f"Failed to generate text: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal error occurred while generating text."}), 500
 
 @ollama_bp.route('/generate_json', methods=['POST'])
 def generate_json():
@@ -306,7 +306,7 @@ def generate_json():
         return jsonify({"error": "Invalid JSON schema"}), 400
     except Exception as e:
         logger.error(f"Failed to generate JSON: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An internal error occurred while generating JSON."}), 500
 
 @ollama_bp.route('/select_action', methods=['POST'])
 def select_action():
